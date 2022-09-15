@@ -4,6 +4,8 @@ import cv2
 import torch
 import torchvision
 import carla
+import shutil
+import pickle
 
 from PIL import Image, ImageDraw
 
@@ -53,6 +55,12 @@ class ImageAgent(BaseAgent):
         self.net.cuda()
         self.net.eval()
 
+        self.capture_folder = '/tmp/capture'
+        if os.path.exists(self.capture_folder):
+            shutil.rmtree(self.capture_folder)
+        os.mkdir(self.capture_folder)
+        self.tick_count = 0
+
     def _init(self):
         super()._init()
 
@@ -88,6 +96,9 @@ class ImageAgent(BaseAgent):
             self._init()
 
         tick_data = self.tick(input_data)
+        with open(os.path.join(self.capture_folder,f'cap_{str(self.tick_count).zfill(4)}.pkl'), 'wb') as f:
+            pickle.dump(tick_data, f)
+
 
         img = torchvision.transforms.functional.to_tensor(tick_data['image'])
         img = img[None].cuda()
@@ -128,6 +139,9 @@ class ImageAgent(BaseAgent):
             self._init()
 
         tick_data = self.tick(input_data)
+        with open(os.path.join(self.capture_folder,f'cap_{str(self.tick_count).zfill(4)}.pkl'), 'wb') as f:
+            pickle.dump(tick_data, f)
+            self.tick_count += 1
 
         img = torchvision.transforms.functional.to_tensor(tick_data['image'])
         img = img[None].cuda()
